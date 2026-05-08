@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <base href="https://cdn.jsdelivr.net/gh/genizy/web-port@main/pizza-tower/">
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0" />
+    <link rel="icon" type="image/png" href="favicon.png">
+    <title>Pizza Tower 1.1.0 Web Port</title>
+    <link rel="stylesheet" href="index.css">
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Inter', sans-serif;
+            text-align: center;
+        }
+
+        #viewport-border {
+            display: none;
+        }
+
+        #game-frame {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #000;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+            width: min(
+                100vw,
+                calc(100vh * 424 / 240)
+            );
+            height: auto;
+            aspect-ratio: 424 / 240;
+            max-width: 100vw;
+            max-height: 100vh;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background-color: #000;
+            image-rendering: pixelated;
+            visibility: hidden;
+            box-sizing: border-box;
+        }
+
+        canvas.visible {
+            visibility: visible;
+        }
+
+        #output { display: none; }
+
+        #loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: auto; height: auto;
+            background: url('https://cdn2.steamgriddb.com/thumb/afc7b0502c395fe1c31b0f42c4e5ac87.jpg') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.1s ease;
+        }
+
+        #loading-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #loading-screen.hidden {
+            display: none;
+        }
+
+        .loading-content {
+            width: 80%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .loading-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mini-favicon {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+
+        .loading-title {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 900;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .loading-mb {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .loading-bar-container {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .loading-bar {
+            width: 0%;
+            height: 100%;
+            background: #ffffff;
+            border-radius: 10px;
+            transition: width 0.3s ease-out;
+        }
+
+        .loading-text {
+            font-size: 13px;
+            color: #ffffff;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            height: 1.2em;
+        }
+
+        .loading-dots {
+            position: absolute;
+            bottom: 40%;
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 50%;
+            animation: dot-pulse 1.5s infinite ease-in-out;
+            box-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .ownership-footer {
+            position: absolute;
+            bottom: 25px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 11px;
+            padding: 0 20px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+    </style>
+    <style>
+        canvas#canvas {
+            width: min(
+                100vw,
+                calc(100vh * 16 / 9)
+            ) !important;
+            aspect-ratio: 16 / 9 !important;
+            height: auto !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            outline: none;
+        }
+
+        #pauseMenuContainer,
+        #output-container,
+        .loading,
+        #spinner,
+        #status,
+        #progress {
+            display: none !important;
+        }
+    </style>
+
+    <style id="anti-gray-out-style">
+        html,
+        body,
+        #game-frame,
+        canvas,
+        canvas#canvas,
+        #canvas,
+        .emscripten {
+            opacity: 1 !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            mix-blend-mode: normal !important;
+        }
+
+        canvas:focus,
+        canvas#canvas:focus,
+        #canvas:focus {
+            opacity: 1 !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+            outline: none !important;
+        }
+
+        body.inactive,
+        body.paused,
+        body.blur,
+        body.blurred,
+        body.unfocused,
+        body.focus-lost,
+        html.inactive,
+        html.paused,
+        html.blur,
+        html.blurred,
+        html.unfocused,
+        html.focus-lost {
+            opacity: 1 !important;
+            filter: none !important;
+            -webkit-filter: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="viewport-border" aria-hidden="true"></div>
+
+    <div id="game-frame">
+        <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    </div>
+    <textarea id="output" rows="8"></textarea>
+
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="loading-header">
+                <div class="title-group">
+                    <img src="https://cdn2.steamgriddb.com/icon_thumb/93ccc2579e526596814fa3a33be4887e.png" class="mini-favicon" alt="icon">
+                    <div class="loading-title">Pizza Tower v1.1.0</div>
+                </div>
+                <div class="loading-mb" id="mb-text">0.0MB of 253.5MB</div>
+            </div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar"></div>
+            </div>
+            <div class="loading-text" id="loading-text">getting jsdlivr stuff</div>
+        </div>
+
+        <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+
+        <div class="ownership-footer">
+            all copyright held by tour de pizza
+        </div>
+    </div>
+
+    <div id="pauseMenuContainer" hidden>
+        <div id="pauseMenuBorder">
+            <div id="pauseMenu">
+                <button id="resumeButton" onclick="resume()"> Resume </button>
+                <button id="quitButton" onclick="quitIfSupported()"> Quit </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading">
+        <div class="spinner" id="spinner"></div>
+        <div class="emscripten" id="status">Downloading...</div>
+        <progress value="0" max="100" id="progress" hidden="1"></progress>
+    </div>
+
+    <div class="output-container" id="output-container">
+        <div id="message-container"><div id="messages"></div></div>
+    </div>
+
+    <script type="text/javascript">
+        var loadingBar = document.getElementById('loading-bar');
+        var loadingText = document.getElementById('loading-text');
+        var mbText = document.getElementById('mb-text');
+        var loadingScreen = document.getElementById('loading-screen');
+        var canvas = document.getElementById('canvas');
+
+        var totalBytes = 265814016; // 253.5 MiB
+        var loadedBytes = 0;
+        var finished = false;
+
+        var links = [
+            "your game is ready",
+        ];
+
+        function formatMB(bytes) {
+            if (!bytes || bytes <= 0) return "0.0MB";
+            return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+        }
+
+        function updateProgressBytes(bytesLoaded) {
+            if (bytesLoaded > totalBytes) {
+                bytesLoaded = totalBytes;
+            }
+
+            var percent = Math.min(100, Math.max(0, (bytesLoaded / totalBytes) * 100));
+            loadingBar.style.width = percent.toFixed(1) + '%';
+            mbText.textContent = formatMB(bytesLoaded) + ' of ' + formatMB(totalBytes);
+        }
+
+        function preventBackgroundFreeze() {
+            
+            try {
+                Object.defineProperty(document, 'hidden', {
+                    configurable: true,
+                    get: function() { return false; }
+                });
+            } catch (e) {}
+
+            try {
+                Object.defineProperty(document, 'visibilityState', {
+                    configurable: true,
+                    get: function() { return 'visible'; }
+                });
+            } catch (e) {}
+
+            try {
+                Object.defineProperty(document, 'webkitHidden', {
+                    configurable: true,
+                    get: function() { return false; }
+                });
+            } catch (e) {}
+
+            try {
+                Object.defineProperty(document, 'webkitVisibilityState', {
+                    configurable: true,
+                    get: function() { return 'visible'; }
+                });
+            } catch (e) {}
+
+            try {
+                document.hasFocus = function() { return true; };
+            } catch (e) {}
+
+            var blockedEvents = {
+                blur: true,
+                focusout: true,
+                visibilitychange: true,
+                webkitvisibilitychange: true,
+                msvisibilitychange: true,
+                pagehide: true,
+                freeze: true
+            };
+
+            var realAddEventListener = EventTarget.prototype.addEventListener;
+            EventTarget.prototype.addEventListener = function(type, listener, options) {
+                var eventName = String(type || '').toLowerCase();
+
+                if (blockedEvents[eventName]) {
+                    return;
+                }
+
+                return realAddEventListener.call(this, type, listener, options);
+            };
+
+            var realRemoveEventListener = EventTarget.prototype.removeEventListener;
+            EventTarget.prototype.removeEventListener = function(type, listener, options) {
+                return realRemoveEventListener.call(this, type, listener, options);
+            };
+
+            ['onblur', 'onfocusout', 'onvisibilitychange', 'onpagehide'].forEach(function(prop) {
+                try {
+                    Object.defineProperty(window, prop, {
+                        configurable: true,
+                        get: function() { return null; },
+                        set: function() { return true; }
+                    });
+                } catch (e) {}
+
+                try {
+                    Object.defineProperty(document, prop, {
+                        configurable: true,
+                        get: function() { return null; },
+                        set: function() { return true; }
+                    });
+                } catch (e) {}
+            });
+
+            realAddEventListener.call(window, 'blur', function(e) {
+                e.stopImmediatePropagation();
+                keepPageVisuallyActive();
+                try { canvas.focus(); } catch (err) {}
+            }, true);
+
+            realAddEventListener.call(document, 'visibilitychange', function(e) {
+                e.stopImmediatePropagation();
+                keepPageVisuallyActive();
+                try { canvas.focus(); } catch (err) {}
+            }, true);
+
+            realAddEventListener.call(window, 'pagehide', function(e) {
+                e.stopImmediatePropagation();
+                keepPageVisuallyActive();
+            }, true);
+        }
+
+        preventBackgroundFreeze();
+
+        function keepPageVisuallyActive() {
+            document.documentElement.classList.remove('inactive', 'paused', 'blur', 'blurred', 'unfocused', 'focus-lost');
+            document.body.classList.remove('inactive', 'paused', 'blur', 'blurred', 'unfocused', 'focus-lost');
+
+            document.documentElement.style.opacity = '1';
+            document.documentElement.style.filter = 'none';
+            document.documentElement.style.webkitFilter = 'none';
+
+            document.body.style.opacity = '1';
+            document.body.style.filter = 'none';
+            document.body.style.webkitFilter = 'none';
+
+            if (canvas) {
+                canvas.style.opacity = '1';
+                canvas.style.filter = 'none';
+                canvas.style.webkitFilter = 'none';
+            }
+        }
+
+        window.addEventListener('blur', function(e) {
+            keepPageVisuallyActive();
+        }, true);
+
+        window.addEventListener('focus', function(e) {
+            keepPageVisuallyActive();
+            try { canvas.focus(); } catch (err) {}
+        }, true);
+
+        document.addEventListener('visibilitychange', function(e) {
+            keepPageVisuallyActive();
+        }, true);
+
+        setInterval(keepPageVisuallyActive, 500);
+
+        function speakCrunch() {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                window.speechSynthesis.cancel();
+                var utterance = new SpeechSynthesisUtterance("Your game is ready");
+                utterance.rate = 1.6;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+            } catch (e) {}
+        }
+
+        window.onclick = function() {
+            try {
+                if (!('speechSynthesis' in window)) return;
+                var probe = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(probe);
+            } catch (e) {}
+        };
+
+        function typeWriter(text, i, callback) {
+            if (i === 0) speakCrunch();
+            if (i < text.length) {
+                loadingText.textContent = text.substring(0, i + 1);
+                setTimeout(function() { typeWriter(text, i + 1, callback); }, 40);
+            } else if (callback) {
+                setTimeout(callback, 3000);
+            }
+        }
+
+        function finishLoading() {
+            if (finished) return;
+            finished = true;
+            var finalTotal = totalBytes || loadedBytes;
+            loadingBar.style.width = '100%';
+            mbText.textContent = formatMB(finalTotal) + ' of ' + formatMB(finalTotal);
+            var randomLink = links[Math.floor(Math.random() * links.length)];
+            typeWriter(randomLink, 0, function() {
+                loadingScreen.classList.add('fade-out');
+                loadingScreen.addEventListener('transitionend', function() {
+                    loadingScreen.classList.add('hidden');
+                    canvas.classList.add('visible');
+                    try { canvas.focus(); } catch (e) {}
+                }, { once: true });
+
+                setTimeout(function() {
+                    loadingScreen.classList.add('hidden');
+                    canvas.classList.add('visible');
+                    try { canvas.focus(); } catch (e) {}
+                }, 1200);
+            });
+        }
+
+        function getParts(file, start, end) {
+            var parts = [];
+            for (var i = start; i <= end; i++) {
+                parts.push(file + ".part" + i);
+            }
+            return parts;
+        }
+
+        async function fetchWithProgress(url) {
+            var response = await fetch(url, { cache: 'force-cache' });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch ' + url + ': ' + response.status);
+            }
+
+            if (!response.body || !response.body.getReader) {
+                var buffer = await response.arrayBuffer();
+                loadedBytes += buffer.byteLength;
+                updateProgressBytes(loadedBytes);
+                loadingText.textContent = 'getting jsdlivr stuff';
+                return buffer;
+            }
+
+            var reader = response.body.getReader();
+            var chunks = [];
+            var received = 0;
+
+            while (true) {
+                var result = await reader.read();
+
+                if (result.done) break;
+
+                var value = result.value;
+                received += value.length;
+                loadedBytes += value.length;
+                chunks.push(value);
+
+                updateProgressBytes(loadedBytes);
+                loadingText.textContent = 'getting jsdlivr stuff';
+            }
+
+            var fullBuffer = new Uint8Array(received);
+            var offset = 0;
+
+            for (var chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                fullBuffer.set(chunks[chunkIndex], offset);
+                offset += chunks[chunkIndex].length;
+            }
+
+            return fullBuffer.buffer;
+        }
+
+        async function mergeFiles(fileParts) {
+            loadedBytes = 0;
+            updateProgressBytes(0);
+
+            var buffers = await Promise.all(fileParts.map(fetchWithProgress));
+            return URL.createObjectURL(new Blob(buffers));
+        }
+
+        function removeOperaGXJunk() {
+            var badText = /opera\s*gx|operagx|download\s+opera|gx\.games/i;
+            var badAttr = /opera|operagx|gx-games|gxgames|sponsor|advert/i;
+            var safeIds = {
+                'canvas': true,
+                'game-frame': true,
+                'viewport-border': true,
+                'loading-screen': true,
+                'loading-bar': true,
+                'loading-text': true,
+                'mb-text': true
+            };
+
+            function isBadNode(node) {
+                if (!node || node.nodeType !== 1) return false;
+                if (safeIds[node.id]) return false;
+                var tag = node.tagName ? node.tagName.toLowerCase() : '';
+                if (tag === 'canvas' || tag === 'script' || tag === 'style' || tag === 'link' || tag === 'base') return false;
+
+                var idClass = ((node.id || '') + ' ' + (node.className || '')).toString();
+                var hrefSrc = ((node.getAttribute && (node.getAttribute('href') || node.getAttribute('src') || '')) || '');
+                var text = (node.innerText || node.textContent || '').slice(0, 500);
+                return badAttr.test(idClass) || badAttr.test(hrefSrc) || badText.test(text);
+            }
+
+            var nodes = Array.prototype.slice.call(document.querySelectorAll('div, section, aside, iframe, a, button, img, p, span'));
+            for (var i = 0; i < nodes.length; i++) {
+                if (isBadNode(nodes[i])) nodes[i].remove();
+            }
+        }
+
+        removeOperaGXJunk();
+        new MutationObserver(function() { removeOperaGXJunk(); }).observe(document.documentElement, { childList: true, subtree: true });
+        setInterval(removeOperaGXJunk, 1000);
+
+        mergeFiles(getParts('game.unx', 1, 13)).then(function(url) {
+            window.gameUnxUrl = url;
+
+            var originalFetch = window.fetch;
+            window.fetch = async function() {
+                var args = Array.prototype.slice.call(arguments);
+                var url = args[0];
+                var options = args[1];
+
+                if (typeof url === 'string' && url.indexOf('game.unx') !== -1) {
+                    url = window.gameUnxUrl;
+                } else if (url instanceof Request && url.url.indexOf('game.unx') !== -1) {
+                    url = new Request(window.gameUnxUrl, url);
+                }
+
+                return originalFetch.call(this, url, options);
+            };
+
+            var originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url) {
+                var rest = Array.prototype.slice.call(arguments, 2);
+                if (typeof url === 'string' && url.indexOf('game.unx') !== -1) {
+                    url = window.gameUnxUrl;
+                }
+                return originalOpen.apply(this, [method, url].concat(rest));
+            };
+
+            var index = document.createElement('script');
+            index.src = 'index.js';
+            document.body.appendChild(index);
+
+            var runner = document.createElement('script');
+            runner.src = 'runner.js';
+            runner.onload = function() {
+                removeOperaGXJunk();
+                setTimeout(finishLoading, 500);
+            };
+            document.body.appendChild(runner);
+        }).catch(function(error) {
+            console.error('Failed to merge files:', error);
+            loadingText.textContent = 'load failed: ' + error.message;
+        });
+    </script>
+</body>
+</html>
