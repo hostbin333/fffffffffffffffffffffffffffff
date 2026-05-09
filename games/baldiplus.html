@@ -79,14 +79,38 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             width: auto; height: auto;
-            background: url('https://cdn2.steamgriddb.com/grid/1a34ab117f87cc3980bc257bd50e2f79.png') no-repeat center center;
-            background-size: cover;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+                linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+                #050505;
+            background-size:
+                100% 100%,
+                100% 100%,
+                64px 64px,
+                64px 64px,
+                64px 64px,
+                64px 64px,
+                auto;
+            background-position:
+                0 0,
+                0 0,
+                0 0,
+                0 32px,
+                32px -32px,
+                -32px 0,
+                0 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             transition: opacity 0.1s ease;
+            overflow: hidden;
+            animation: checkerDrift 28s linear infinite;
         }
 
         #loading-screen.fade-out {
@@ -188,6 +212,30 @@
         @keyframes dot-pulse {
             0%, 100% { opacity: 0.3; transform: scale(0.8); }
             50% { opacity: 1; transform: scale(1.2); }
+        }
+
+        @keyframes checkerDrift {
+            from {
+                background-position:
+                    0 0,
+                    0 0,
+                    0 0,
+                    0 32px,
+                    32px -32px,
+                    -32px 0,
+                    0 0;
+            }
+
+            to {
+                background-position:
+                    0 0,
+                    0 0,
+                    -128px 128px,
+                    -128px 160px,
+                    -96px 96px,
+                    -160px 128px,
+                    0 0;
+            }
         }
 
         .ownership-footer {
