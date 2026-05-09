@@ -1,6 +1,5 @@
 <!doctype html>
-<!-- Credit to Crunchtop for the port-->
-<!-- Note to web developers looking to add this to their website. This game can bug out and crash sometimes. Refresh the page if a crash is experienced -->
+
 <html lang="en-us">
 <head>
     <meta charset="utf-8" />
@@ -67,13 +66,38 @@
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             width: auto; height: auto;
-            background: url('https://file.garden/aGrRhb8s9wg7xD-q/mYMuwpPA3kPgWoCWzvaVytSI.avif') no-repeat center center;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+                radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+                linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+                #050505;
+            background-size:
+                100% 100%,
+                100% 100%,
+                64px 64px,
+                64px 64px,
+                64px 64px,
+                64px 64px,
+                auto;
+            background-position:
+                0 0,
+                0 0,
+                0 0,
+                0 32px,
+                32px -32px,
+                -32px 0,
+                0 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             transition: opacity 0.1s ease;
+            overflow: hidden;
+            animation: checkerDrift 28s linear infinite;
         }
 
         #loading-screen.fade-out {
@@ -177,6 +201,30 @@
             50% { opacity: 1; transform: scale(1.2); }
         }
 
+        @keyframes checkerDrift {
+            from {
+                background-position:
+                    0 0,
+                    0 0,
+                    0 0,
+                    0 32px,
+                    32px -32px,
+                    -32px 0,
+                    0 0;
+            }
+
+            to {
+                background-position:
+                    0 0,
+                    0 0,
+                    -128px 128px,
+                    -128px 160px,
+                    -96px 96px,
+                    -160px 128px,
+                    0 0;
+            }
+        }
+
         .ownership-footer {
             position: absolute;
             bottom: 25px;
@@ -193,7 +241,7 @@
 
     <div id="viewport-border" aria-hidden="true"></div>
 
-    <!-- Canvas always present and running, just invisible until fade done -->
+    
     <div id="game-frame">
         <canvas id="canvas" width="424" height="240" tabindex="0" onclick="window.focus(); this.focus();" oncontextmenu="event.preventDefault();"></canvas>
     </div>
