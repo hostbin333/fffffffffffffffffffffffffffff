@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <base href="https://cdn.jsdelivr.net/gh/genizy/web-port@main/bendy/">
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>about:game</title>
+  <link rel="shortcut icon" href="TemplateData/favicon.ico">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: #050505;
+      position: fixed;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .webgl-content {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    #unityContainer {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    .footer {
+      display: none;
+    }
+
+    .fullscreen {
+      cursor: pointer;
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background: url('TemplateData/fullscreen.png') no-repeat center;
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+        linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        #050505;
+      background-size:
+        100% 100%,
+        100% 100%,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        auto;
+      background-position:
+        0 0,
+        0 0,
+        0 0,
+        0 32px,
+        32px -32px,
+        -32px 0,
+        0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.15s ease;
+      animation: checkerDrift 28s linear infinite;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #loading-screen.hidden {
+      display: none;
+    }
+
+    .loading-content {
+      width: min(80%, 600px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .loading-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mini-favicon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .loading-title {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .loading-mb {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .loading-bar-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .loading-bar {
+      width: 0%;
+      height: 100%;
+      background: #fff;
+      border-radius: 10px;
+      transition: width 0.2s ease-out;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      min-height: 1.2em;
+    }
+
+    .loading-dots {
+      position: absolute;
+      bottom: 40%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      animation: dotPulse 1.5s infinite ease-in-out;
+      box-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    .ownership-footer {
+      position: absolute;
+      bottom: 25px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      padding: 0 20px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    @keyframes dotPulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+
+    @keyframes checkerDrift {
+      from {
+        background-position:
+          0 0,
+          0 0,
+          0 0,
+          0 32px,
+          32px -32px,
+          -32px 0,
+          0 0;
+      }
+
+      to {
+        background-position:
+          0 0,
+          0 0,
+          -128px 128px,
+          -128px 160px,
+          -96px 96px,
+          -160px 128px,
+          0 0;
+      }
+    }
+  </style>
+  <script src="TemplateData/UnityProgress.js"></script>
+  <script src="Build/UnityLoader.js"></script>
+  <script>
+    let loadingBar;
+    let loadingText;
+    let mbText;
+    let loadingScreen;
+    let totalBytes = 0;
+    let loadedBytes = 0;
+    let partSizes = Object.create(null);
+    let finishedLoading = false;
+
+    function formatMB(bytes) {
+      if (!bytes || bytes <= 0) return "0.0MB";
+      return (bytes / (1024 * 1024)).toFixed(1) + "MB";
+    }
+
+    function recalcTotalBytes() {
+      totalBytes = Object.keys(partSizes).reduce(function(sum, key) {
+        return sum + (partSizes[key] || 0);
+      }, 0);
+    }
+
+    function setPartSize(url, size) {
+      if (!Number.isFinite(size) || size <= 0) return;
+      partSizes[url] = size;
+      recalcTotalBytes();
+      updateLoadingProgress();
+    }
+
+    function updateLoadingProgress() {
+      const safeTotal = totalBytes || loadedBytes || 1;
+      const percent = totalBytes ? Math.min(100, Math.max(0, loadedBytes / safeTotal * 100)) : 0;
+      if (loadingBar) loadingBar.style.width = percent.toFixed(1) + "%";
+      if (mbText) {
+        if (totalBytes) {
+          mbText.textContent = formatMB(Math.min(loadedBytes, totalBytes)) + " of " + formatMB(totalBytes);
+        } else {
+          mbText.textContent = formatMB(loadedBytes) + " of calculating...";
+        }
+      }
+      if (loadingText) loadingText.textContent = "loading";
+    }
+
+    function finishLoadingScreen() {
+      if (finishedLoading) return;
+      finishedLoading = true;
+      const finalTotal = totalBytes || loadedBytes;
+      loadingBar.style.width = "100%";
+      mbText.textContent = formatMB(finalTotal) + " of " + formatMB(finalTotal);
+      loadingText.textContent = "your game is ready";
+      setTimeout(function() {
+        loadingScreen.classList.add("fade-out");
+        loadingScreen.addEventListener("transitionend", function() {
+          loadingScreen.classList.add("hidden");
+        }, { once: true });
+        setTimeout(function() {
+          loadingScreen.classList.add("hidden");
+        }, 400);
+      }, 500);
+    }
+
+    async function fetchPartWithProgress(url) {
+      const response = await fetch(url, { cache: "force-cache" });
+      if (!response.ok) throw new Error("Failed to fetch " + url + ": " + response.status);
+
+      const headerLength = Number(response.headers.get("content-length"));
+      if (Number.isFinite(headerLength) && headerLength > 0) {
+        setPartSize(url, headerLength);
+      }
+
+      if (!response.body || !response.body.getReader) {
+        const buffer = await response.arrayBuffer();
+        loadedBytes += buffer.byteLength;
+        setPartSize(url, buffer.byteLength);
+        updateLoadingProgress();
+        return buffer;
+      }
+
+      const reader = response.body.getReader();
+      const chunks = [];
+      let received = 0;
+
+      while (true) {
+        const result = await reader.read();
+        if (result.done) break;
+        const value = result.value;
+        received += value.length;
+        loadedBytes += value.length;
+        chunks.push(value);
+        updateLoadingProgress();
+      }
+
+      setPartSize(url, received);
+
+      const fullBuffer = new Uint8Array(received);
+      let offset = 0;
+
+      for (const chunk of chunks) {
+        fullBuffer.set(chunk, offset);
+        offset += chunk.length;
+      }
+
+      return fullBuffer.buffer;
+    }
+
+    async function mergeFiles(fileParts) {
+      const buffers = [];
+      for (let i = 0; i < fileParts.length; i++) {
+        buffers.push(await fetchPartWithProgress(fileParts[i]));
+      }
+      return URL.createObjectURL(new Blob(buffers));
+    }
+
+    function getParts(file, start, end) {
+      let parts = [];
+      for (let i = start; i <= end; i++) {
+        parts.push(file + ".part" + i);
+      }
+      return parts;
+    }
+
+    function resizeUnityContainer() {
+      var container = document.getElementById("unityContainer");
+      container.style.width = window.innerWidth + "px";
+      container.style.height = window.innerHeight + "px";
+    }
+
+    function startGame() {
+      Promise.all([
+        mergeFiles(getParts("Build/BATIM.data.unityweb", 1, 7))
+      ]).then(([dataUrl]) => {
+        window.dataUrll = dataUrl;
+        var json = {
+          "companyName": "Joey Drew Studios",
+          "productName": "Bendy and the Ink Machine",
+          "productVersion": "1.0",
+          "dataUrl": "BATIM.data.unityweb",
+          "wasmCodeUrl": "BATIM.wasm.code.unityweb",
+          "wasmFrameworkUrl": "BATIM.wasm.framework.unityweb",
+          "graphicsAPI": ["WebGL 2.0", "WebGL 1.0"],
+          "webglContextAttributes": {
+            "preserveDrawingBuffer": false
+          },
+          "splashScreenStyle": "Dark",
+          "backgroundColor": "#231F20",
+          "developmentBuild": false,
+          "multithreading": false,
+          "unityVersion": "2019.4.17f1"
+        };
+        let blob = new Blob([JSON.stringify(json)], {
+          type: "application/json"
+        });
+        let blobUrl = URL.createObjectURL(blob);
+        window.addEventListener("resize", resizeUnityContainer);
+        UnityLoader.instantiate("unityContainer", json, {
+          onProgress: UnityProgress,
+          url: blobUrl,
+          Module: {
+            onRuntimeInitialized: function () {
+              resizeUnityContainer();
+              finishLoadingScreen();
+            }
+          }
+        });
+      }).catch(function(error) {
+        console.error(error);
+        loadingText.textContent = "load failed: " + error.message;
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", function() {
+      loadingBar = document.getElementById("loading-bar");
+      loadingText = document.getElementById("loading-text");
+      mbText = document.getElementById("mb-text");
+      loadingScreen = document.getElementById("loading-screen");
+      updateLoadingProgress();
+      startGame();
+    });
+  </script>
+</head>
+<body>
+  <div class="webgl-content">
+    <div id="unityContainer"></div>
+  </div>
+
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-header">
+        <div class="title-group">
+          <img src="https://cdn2.steamgriddb.com/icon_thumb/8ff2a1bba6db0fafde3d11c58a584cda.png" class="mini-favicon" alt="icon">
+          <div class="loading-title">Bendy and the Ink Machine</div>
+        </div>
+        <div class="loading-mb" id="mb-text">0.0MB of calculating...</div>
+      </div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-text" id="loading-text">loading</div>
+    </div>
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="ownership-footer">all copyright held by joey drew studios</div>
+  </div>
+</body>
+</html>
