@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="https://cdn.jsdelivr.net/gh/technonyte00/deltarune@main/">
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    #aboutGameLoadingScreen {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+        linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        #050505;
+      background-size:
+        100% 100%,
+        100% 100%,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        auto;
+      background-position:
+        0 0,
+        0 0,
+        0 0,
+        0 32px,
+        32px -32px,
+        -32px 0,
+        0 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2147483000;
+      transition: opacity 0.15s ease;
+      animation: aboutGameCheckerDrift 28s linear infinite;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    #aboutGameLoadingScreen.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    #aboutGameLoadingScreen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .about-loading-content {
+      width: min(80%, 600px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .about-loading-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 16px;
+    }
+
+    .about-title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .about-mini-favicon {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .about-loading-title {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .about-loading-mb {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .about-loading-bar-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .about-loading-bar {
+      width: 0%;
+      height: 100%;
+      background: #fff;
+      border-radius: 10px;
+      transition: width 0.2s ease-out;
+    }
+
+    .about-loading-text {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      min-height: 1.2em;
+    }
+
+    .about-loading-dots {
+      position: absolute;
+      bottom: 40%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .about-dot {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      animation: aboutDotPulse 1.5s infinite ease-in-out;
+      box-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    .about-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .about-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    .about-ownership-footer {
+      position: absolute;
+      bottom: 25px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      padding: 0 20px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    @keyframes aboutDotPulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+
+    @keyframes aboutGameCheckerDrift {
+      from {
+        background-position:
+          0 0,
+          0 0,
+          0 0,
+          0 32px,
+          32px -32px,
+          -32px 0,
+          0 0;
+      }
+
+      to {
+        background-position:
+          0 0,
+          0 0,
+          -128px 128px,
+          -128px 160px,
+          -96px 96px,
+          -160px 128px,
+          0 0;
+      }
+    }
+  </style>
+
+</head>
+<body>
+
+  <div id="aboutGameLoadingScreen">
+    <div class="about-loading-content">
+      <div class="about-loading-header">
+        <div class="about-title-group">
+<div class="about-loading-title" id="aboutLoadingTitle">Deltarune</div>
+        </div>
+        <div class="about-loading-mb" id="aboutLoadingMb">0.0MB of calculating...</div>
+      </div>
+      <div class="about-loading-bar-container">
+        <div class="about-loading-bar" id="aboutLoadingBar"></div>
+      </div>
+      <div class="about-loading-text" id="aboutLoadingText">loading</div>
+    </div>
+    <div class="about-loading-dots">
+      <div class="about-dot"></div>
+      <div class="about-dot"></div>
+      <div class="about-dot"></div>
+    </div>
+    <div class="about-ownership-footer">all copyright held by toby fox</div>
+  </div>
+
+  <div class="logo-container">
+    <img src="logo.png" alt="Logo" class="logo">
+  </div>
+  
+  <div class="menu">
+    <a href="javascript:loadChapter(1)" class="row">
+      <span class="chapter">Chapter 1</span>
+      <span class="title">The Beginning</span>
+      <img src="icons/1.png">
+    </a>
+    <a href="javascript:loadChapter(2)" class="row">
+      <span class="chapter">Chapter 2</span>
+      <span class="title">A Cyber's World</span>
+      <img src="icons/2.png">
+    </a>
+    <a href="javascript:loadChapter(3)" class="row">
+      <span class="chapter">Chapter 3</span>
+      <span class="title">Late Night</span>
+      <img src="icons/3.png">
+    </a>
+    <a href="javascript:loadChapter(4)" class="row">
+      <span class="chapter">Chapter 4</span>
+      <span class="title">Prophecy</span>
+      <img src="icons/4.png">
+    </a>
+    <a href="javascript:alert('Chapter 5 coming soon!')" class="disabled-row">
+      <span class="chapter">Chapter 5</span>
+      <span class="disabled-title">--</span>
+      <img src="icons/0.png">
+    </a>
+    <a href="javascript:alert('Chapter 6 coming soon!')" class="disabled-row">
+      <span class="chapter">Chapter 6</span>
+      <span class="disabled-title">--</span>
+      <img src="icons/0.png">
+    </a>
+    <a href="javascript:alert('Chapter 7 coming soon!')" class="disabled-row">
+      <span class="chapter">Chapter 7</span>
+      <span class="disabled-title">--</span>
+      <img src="icons/0.png">
+    </a>
+  </div>
+  <audio id="drone" controls loop autoplay hidden>
+    <source src="audios/AUDIO_DRONE.ogg" type="audio/ogg">
+    your slow ass browser doesnt support AUDIO?
+  </audio>
+  <button id="mute">🔊</button>
+  <script>
+    const audio = document.getElementById('drone');
+    const mute = document.getElementById('mute');
+    const aboutLoadingScreen = document.getElementById('aboutGameLoadingScreen');
+    const aboutLoadingBar = document.getElementById('aboutLoadingBar');
+    const aboutLoadingText = document.getElementById('aboutLoadingText');
+    const aboutLoadingMb = document.getElementById('aboutLoadingMb');
+    const aboutLoadingTitle = document.getElementById('aboutLoadingTitle');
+let gamestarted = false;
+    let selectedChapter = null;
+
+    const chapterLabels = {
+      1: 'Chapter 1',
+      2: 'Chapter 2',
+      3: 'Chapter 3',
+      4: 'Chapter 4'
+    };
+
+    const chapterManifests = {
+      1: [
+        'chapter1/game.unx',
+        'chapter1/runner.data',
+        'chapter1/runner.wasm'
+      ],
+      2: [
+        'chapter2/game.unx.part1',
+        'chapter2/game.unx.part2',
+        'chapter2/game.unx.part3',
+        'chapter2/game.unx.part4',
+        'chapter2/runner.data',
+        'chapter2/runner.wasm'
+      ],
+      3: [
+        'chapter3/game.unx.part1',
+        'chapter3/game.unx.part2',
+        'chapter3/game.unx.part3',
+        'chapter3/game.unx.part4',
+        'chapter3/game.unx.part5',
+        'chapter3/game.unx.part6',
+        'chapter3/game.unx.part7',
+        'chapter3/game.unx.part8',
+        'chapter3/runner.data.part1',
+        'chapter3/runner.data.part2',
+        'chapter3/runner.wasm'
+      ],
+      4: [
+        'chapter4/game.unx.part1',
+        'chapter4/game.unx.part2',
+        'chapter4/game.unx.part3',
+        'chapter4/game.unx.part4',
+        'chapter4/game.unx.part5',
+        'chapter4/game.unx.part6',
+        'chapter4/game.unx.part7',
+        'chapter4/game.unx.part8',
+        'chapter4/runner.data.part1',
+        'chapter4/runner.data.part2',
+        'chapter4/runner.wasm'
+      ]
+    };
+
+    const fallbackChapterBytes = {
+      1: 194 * 1024 * 1024,
+      2: 232 * 1024 * 1024,
+      3: 430 * 1024 * 1024,
+      4: 430 * 1024 * 1024
+    };
+
+    function formatMB(bytes) {
+      if (!bytes || bytes <= 0) return '0.0MB';
+      return (bytes / (1024 * 1024)).toFixed(1) + 'MB';
+    }
+
+    function setLoadingProgress(loaded, total) {
+      const safeTotal = total || 0;
+      const safeLoaded = Math.min(loaded || 0, safeTotal || loaded || 0);
+      if (safeTotal > 0) {
+        const percent = Math.min(100, Math.max(0, safeLoaded / safeTotal * 100));
+        aboutLoadingBar.style.width = percent.toFixed(1) + '%';
+        aboutLoadingMb.textContent = formatMB(safeLoaded) + ' of ' + formatMB(safeTotal);
+      } else {
+        aboutLoadingBar.style.width = '0%';
+        aboutLoadingMb.textContent = formatMB(safeLoaded) + ' of calculating...';
+      }
+      aboutLoadingText.textContent = 'loading';
+    }
+
+    function showLoading(chapter, total) {
+      aboutLoadingScreen.classList.remove('fade-out');
+      aboutLoadingScreen.classList.add('visible');
+      aboutLoadingTitle.textContent = chapterLabels[chapter] || 'Deltarune';
+setLoadingProgress(0, total || fallbackChapterBytes[chapter] || 0);
+    }
+
+    function finishMenuLoading(total) {
+      aboutLoadingBar.style.width = '100%';
+      aboutLoadingMb.textContent = formatMB(total || 0) + ' of ' + formatMB(total || 0);
+      aboutLoadingText.textContent = 'your game is ready';
+    }
+
+    async function getContentLength(url) {
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          cache: 'force-cache'
+        });
+        if (!response.ok) return 0;
+        return Number(response.headers.get('content-length')) || 0;
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    async function getChapterTotalBytes(chapter) {
+      const manifest = chapterManifests[chapter] || [];
+      const sizes = await Promise.all(manifest.map(getContentLength));
+      const total = sizes.reduce(function(sum, size) {
+        return sum + size;
+      }, 0);
+      return total || fallbackChapterBytes[chapter] || 0;
+    }
+
+    function injectFitOnly(chapterHtml) {
+      chapterHtml = String(chapterHtml || "");
+
+      chapterHtml = chapterHtml.replace(/opera\s*gx/ig, "");
+      chapterHtml = chapterHtml.replace(/gx\.games/ig, "");
+
+      const fitStyle = `<style id="aboutGameFitScreen">
+        html,
+        body {
+          width: 100vw !important;
+          height: 100vh !important;
+          min-width: 100vw !important;
+          min-height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          background: #000 !important;
+        }
+
+        canvas,
+        #canvas,
+        .canvas,
+        .emscripten,
+        .webgl-content,
+        #unity-container,
+        #unityContainer,
+        #game-container,
+        #game,
+        #runner,
+        #application,
+        .game,
+        .game-container {
+          max-width: 100vw !important;
+          max-height: 100vh !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          border-radius: 0 !important;
+          box-sizing: border-box !important;
+        }
+
+        canvas,
+        #canvas {
+          width: 100vw !important;
+          height: 100vh !important;
+          object-fit: contain !important;
+          display: block !important;
+          background: #000 !important;
+          opacity: 1 !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+
+        html,
+        body,
+        canvas,
+        #canvas,
+        .emscripten,
+        .webgl-content {
+          opacity: 1 !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+          backdrop-filter: none !important;
+          -webkit-backdrop-filter: none !important;
+          mix-blend-mode: normal !important;
+        }
+
+        body.inactive,
+        body.paused,
+        body.blur,
+        body.blurred,
+        body.unfocused,
+        body.focus-lost,
+        html.inactive,
+        html.paused,
+        html.blur,
+        html.blurred,
+        html.unfocused,
+        html.focus-lost {
+          opacity: 1 !important;
+          filter: none !important;
+          -webkit-filter: none !important;
+        }
+
+        #loading,
+        #loading-screen,
+        #loadingScreen,
+        #loading-text,
+        #loadingText,
+        #spinner,
+        #status,
+        #status-container,
+        #statusContainer,
+        #progress,
+        #progress-bar,
+        #progressBar,
+        #pauseMenuContainer,
+        #pauseMenu,
+        #pauseMenuBorder,
+        #resumeButton,
+        #quitButton,
+        .loading,
+        .loader,
+        .spinner,
+        .status,
+        .progress,
+        .pause,
+        .pause-menu,
+        .pauseMenu,
+        .opera,
+        .opera-gx,
+        .operagx,
+        .gx,
+        .gx-games,
+        .sponsor,
+        .ad,
+        .advert,
+        [class*="opera" i],
+        [id*="opera" i],
+        [class*="operagx" i],
+        [id*="operagx" i],
+        [class*="gx-games" i],
+        [id*="gx-games" i],
+        [class*="pause" i],
+        [id*="pause" i] {
+          display: none !important;
+          visibility: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
+      </style>`;
+
+      const cleanupScript = `<script id="aboutGameCleanupScript">
+        (function() {
+          function removeJunk() {
+            var badText = /opera\\s*gx|operagx|gx\\.games|download\\s+opera|sponsored/i;
+            var badAttr = /opera|operagx|gx-games|gxgames|sponsor|advert|pause/i;
+            var keepIds = {
+              canvas: true,
+              game: true,
+              runner: true,
+              application: true
+            };
+
+            var nodes = Array.prototype.slice.call(document.querySelectorAll("div, section, aside, iframe, a, button, img, p, span"));
+            for (var i = 0; i < nodes.length; i++) {
+              var node = nodes[i];
+              if (!node || node.nodeType !== 1) continue;
+              if (keepIds[node.id]) continue;
+
+              var tag = node.tagName ? node.tagName.toLowerCase() : "";
+              if (tag === "canvas" || tag === "script" || tag === "style" || tag === "link" || tag === "base") continue;
+
+              var idClass = ((node.id || "") + " " + (node.className || "")).toString();
+              var hrefSrc = ((node.getAttribute && (node.getAttribute("href") || node.getAttribute("src") || "")) || "");
+              var text = (node.innerText || node.textContent || "").slice(0, 500);
+
+              if (badAttr.test(idClass) || badAttr.test(hrefSrc) || badText.test(text)) {
+                node.remove();
+              }
+            }
+          }
+
+          function hideExistingLoaders() {
+            var selectors = [
+              "#loading", "#loading-screen", "#loadingScreen", "#loading-text", "#loadingText",
+              "#spinner", "#status", "#status-container", "#statusContainer",
+              "#progress", "#progress-bar", "#progressBar",
+              ".loading", ".loader", ".spinner", ".status", ".progress",
+              "#pauseMenuContainer", "#pauseMenu", "#pauseMenuBorder"
+            ];
+
+            selectors.forEach(function(selector) {
+              document.querySelectorAll(selector).forEach(function(node) {
+                node.style.setProperty("display", "none", "important");
+                node.style.setProperty("visibility", "hidden", "important");
+                node.style.setProperty("opacity", "0", "important");
+                node.style.setProperty("pointer-events", "none", "important");
+              });
+            });
+          }
+
+          function keepPageActive() {
+            try {
+              document.documentElement.classList.remove("inactive", "paused", "blur", "blurred", "unfocused", "focus-lost");
+              document.body.classList.remove("inactive", "paused", "blur", "blurred", "unfocused", "focus-lost");
+
+              document.documentElement.style.setProperty("opacity", "1", "important");
+              document.documentElement.style.setProperty("filter", "none", "important");
+              document.documentElement.style.setProperty("-webkit-filter", "none", "important");
+
+              document.body.style.setProperty("opacity", "1", "important");
+              document.body.style.setProperty("filter", "none", "important");
+              document.body.style.setProperty("-webkit-filter", "none", "important");
+
+              var canvas = document.querySelector("canvas");
+              if (canvas) {
+                canvas.style.setProperty("opacity", "1", "important");
+                canvas.style.setProperty("filter", "none", "important");
+                canvas.style.setProperty("-webkit-filter", "none", "important");
+                try { canvas.focus(); } catch (e) {}
+              }
+            } catch (e) {}
+          }
+
+          function fitGame() {
+            document.documentElement.style.width = "100vw";
+            document.documentElement.style.height = "100vh";
+            document.body.style.width = "100vw";
+            document.body.style.height = "100vh";
+            document.body.style.margin = "0";
+            document.body.style.overflow = "hidden";
+
+            var canvas = document.querySelector("canvas");
+            if (canvas) {
+              canvas.style.setProperty("width", "100vw", "important");
+              canvas.style.setProperty("height", "100vh", "important");
+              canvas.style.setProperty("max-width", "100vw", "important");
+              canvas.style.setProperty("max-height", "100vh", "important");
+              canvas.style.setProperty("display", "block", "important");
+              canvas.style.setProperty("opacity", "1", "important");
+              canvas.style.setProperty("filter", "none", "important");
+              canvas.style.setProperty("-webkit-filter", "none", "important");
+            }
+          }
+
+          function preventTabOutFreeze() {
+            try {
+              Object.defineProperty(document, "hidden", {
+                configurable: true,
+                get: function() { return false; }
+              });
+            } catch (e) {}
+
+            try {
+              Object.defineProperty(document, "visibilityState", {
+                configurable: true,
+                get: function() { return "visible"; }
+              });
+            } catch (e) {}
+
+            try {
+              Object.defineProperty(document, "webkitHidden", {
+                configurable: true,
+                get: function() { return false; }
+              });
+            } catch (e) {}
+
+            try {
+              Object.defineProperty(document, "webkitVisibilityState", {
+                configurable: true,
+                get: function() { return "visible"; }
+              });
+            } catch (e) {}
+
+            try {
+              document.hasFocus = function() { return true; };
+            } catch (e) {}
+
+            var blockedEvents = {
+              blur: true,
+              focusout: true,
+              visibilitychange: true,
+              webkitvisibilitychange: true,
+              msvisibilitychange: true,
+              pagehide: true,
+              freeze: true,
+              resume: true
+            };
+
+            var realAddEventListener = EventTarget.prototype.addEventListener;
+            var realRemoveEventListener = EventTarget.prototype.removeEventListener;
+
+            EventTarget.prototype.addEventListener = function(type, listener, options) {
+              var eventName = String(type || "").toLowerCase();
+              if (blockedEvents[eventName]) {
+                return;
+              }
+              return realAddEventListener.call(this, type, listener, options);
+            };
+
+            EventTarget.prototype.removeEventListener = function(type, listener, options) {
+              return realRemoveEventListener.call(this, type, listener, options);
+            };
+
+            ["onblur", "onfocusout", "onvisibilitychange", "onwebkitvisibilitychange", "onpagehide", "onfreeze"].forEach(function(prop) {
+              try {
+                Object.defineProperty(window, prop, {
+                  configurable: true,
+                  get: function() { return null; },
+                  set: function() { return true; }
+                });
+              } catch (e) {}
+
+              try {
+                Object.defineProperty(document, prop, {
+                  configurable: true,
+                  get: function() { return null; },
+                  set: function() { return true; }
+                });
+              } catch (e) {}
+            });
+
+            realAddEventListener.call(window, "blur", function(event) {
+              event.stopImmediatePropagation();
+              keepPageActive();
+            }, true);
+
+            realAddEventListener.call(window, "focus", function(event) {
+              event.stopImmediatePropagation();
+              keepPageActive();
+            }, true);
+
+            realAddEventListener.call(document, "visibilitychange", function(event) {
+              event.stopImmediatePropagation();
+              keepPageActive();
+            }, true);
+
+            realAddEventListener.call(window, "pagehide", function(event) {
+              event.stopImmediatePropagation();
+              keepPageActive();
+            }, true);
+          }
+
+          preventTabOutFreeze();
+          removeJunk();
+          hideExistingLoaders();
+          fitGame();
+          keepPageActive();
+
+          var observer = new MutationObserver(function() {
+            removeJunk();
+            hideExistingLoaders();
+            fitGame();
+            keepPageActive();
+          });
+
+          observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["class", "style"]
+          });
+
+          setInterval(function() {
+            removeJunk();
+            hideExistingLoaders();
+            fitGame();
+            keepPageActive();
+          }, 500);
+        })();
+      <\/script>`;
+
+      if (/<head[^>]*>/i.test(chapterHtml)) {
+        return chapterHtml.replace(/<head[^>]*>/i, function(match) {
+          return match + fitStyle + cleanupScript;
+        });
+      }
+
+      return fitStyle + cleanupScript + chapterHtml;
+    }
+
+    mute.addEventListener('click', () => {
+      if (!gamestarted) {
+        audio.muted = !audio.muted;
+        updateButton();
+      }
+    });
+
+    function updateButton() {
+      if (!gamestarted) {
+        mute.textContent = audio.muted ? '🔊' : '🔇';
+      }
+    }
+
+    updateButton();
+
+    async function loadChapter(chapter) {
+      if (gamestarted) return;
+      gamestarted = true;
+
+      try {
+        audio.pause();
+      } catch (e) {}
+
+      showLoading(chapter, fallbackChapterBytes[chapter]);
+
+      try {
+        const totalBytes = await getChapterTotalBytes(chapter);
+        setLoadingProgress(0, totalBytes);
+
+        const response = await fetch(`./chapter${chapter}/index.html`);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const chapterHtml = await response.text();
+
+        finishMenuLoading(totalBytes);
+
+        setTimeout(function() {
+          const patchedHtml = injectFitOnly(chapterHtml);
+          document.documentElement.innerHTML = patchedHtml;
+          document.documentElement.querySelectorAll('script').forEach(oldScript => {
+            const newScript = document.createElement('script');
+            if (oldScript.src) {
+              newScript.src = oldScript.src;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
+            document.body.appendChild(newScript);
+          });
+        }, 120);
+      } catch (error) {
+        gamestarted = false;
+        aboutLoadingText.textContent = 'load failed: ' + error.message;
+      }
+    }
+
+    const hoverSound = document.getElementById('hover-sound');
+
+    const menumoveaudio = new Audio('audios/snd_menumove.mp3');
+    const menuselectaudio = new Audio('audios/snd_select.mp3');
+    document.querySelectorAll('.row').forEach(row => {
+      row.addEventListener('mouseenter', () => {
+        if (!gamestarted) {
+          menumoveaudio.play();
+          if (selectedChapter !== null) {
+            document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+          }
+        }
+      });
+      row.addEventListener('click', () => {
+        if (!gamestarted) {
+          menuselectaudio.play();
+        }
+      });
+    });
+
+    document.addEventListener('keydown', function(event) {
+      if (!gamestarted) {
+        if (event.key === 'ArrowUp') {
+          if (selectedChapter === null) {
+            selectedChapter = 0;
+            document.querySelectorAll('.row')[0].classList.add("selected");
+            menumoveaudio.play();
+          } else {
+            document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+            selectedChapter--;
+            if (selectedChapter < 0) {
+              selectedChapter = document.querySelectorAll('.row').length - 1;
+            }
+            document.querySelectorAll('.row')[selectedChapter].classList.add("selected");
+            menumoveaudio.play();
+          }
+        } else if (event.key === 'ArrowDown') {
+          if (selectedChapter === null) {
+            selectedChapter = 0;
+            document.querySelectorAll('.row')[0].classList.add("selected");
+            menumoveaudio.play();
+          } else {
+            if (selectedChapter + 1 >= document.querySelectorAll('.row').length) {
+              document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+              selectedChapter = 0;
+              document.querySelectorAll('.row')[0].classList.add("selected");
+              menumoveaudio.play();
+            } else {
+              document.querySelectorAll('.row')[selectedChapter].classList.remove("selected");
+              selectedChapter++;
+              document.querySelectorAll('.row')[selectedChapter].classList.add("selected");
+              menumoveaudio.play();
+            }
+          }
+        } else if (event.key === 'Enter') {
+          if (selectedChapter !== null) {
+            event.preventDefault();
+            document.querySelectorAll('.row')[selectedChapter].click();
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
