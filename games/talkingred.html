@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>about:game</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #050505;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+      background: transparent;
+    }
+
+    #game-frame {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 1;
+    }
+
+    #game-frame iframe {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      border: 0;
+      outline: 0;
+      background: #000;
+    }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+        linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        #050505;
+      background-size:
+        100% 100%,
+        100% 100%,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        64px 64px,
+        auto;
+      background-position:
+        0 0,
+        0 0,
+        0 0,
+        0 32px,
+        32px -32px,
+        -32px 0,
+        0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.15s ease;
+      animation: checkerDrift 28s linear infinite;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #loading-screen.hidden {
+      display: none;
+    }
+
+    .loading-content {
+      width: min(80%, 600px);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .loading-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 16px;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .loading-title {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .loading-mb {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+
+    .loading-bar-container {
+      width: 100%;
+      height: 10px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    .loading-bar {
+      width: 0%;
+      height: 100%;
+      background: #fff;
+      border-radius: 10px;
+      transition: width 0.2s ease-out;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      min-height: 1.2em;
+    }
+
+    .loading-dots {
+      position: absolute;
+      bottom: 40%;
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border-radius: 50%;
+      animation: dotPulse 1.5s infinite ease-in-out;
+      box-shadow: 0 0 5px rgba(255,255,255,0.5);
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    .ownership-footer {
+      position: absolute;
+      bottom: 25px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255,255,255,0.7);
+      font-size: 11px;
+      padding: 0 20px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    @keyframes dotPulse {
+      0%, 100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+      }
+    }
+
+    @keyframes checkerDrift {
+      from {
+        background-position:
+          0 0,
+          0 0,
+          0 0,
+          0 32px,
+          32px -32px,
+          -32px 0,
+          0 0;
+      }
+
+      to {
+        background-position:
+          0 0,
+          0 0,
+          -128px 128px,
+          -128px 160px,
+          -96px 96px,
+          -160px 128px,
+          0 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-frame">
+    <iframe id="game" src="https://talking-red.pages.dev/" allow="autoplay; fullscreen; gamepad; keyboard-map; clipboard-read; clipboard-write; pointer-lock" allowfullscreen></iframe>
+  </div>
+
+  <div id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-header">
+        <div class="title-group">
+          <div class="loading-title">Talking Red</div>
+        </div>
+        <div class="loading-mb" id="mb-text">loading...</div>
+      </div>
+      <div class="loading-bar-container">
+        <div class="loading-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-text" id="loading-text">loading</div>
+    </div>
+    <div class="loading-dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+    <div class="ownership-footer">all copyright held by their respective owners</div>
+  </div>
+
+  <script>
+    const frame = document.getElementById("game");
+    const loadingScreen = document.getElementById("loading-screen");
+    const loadingBar = document.getElementById("loading-bar");
+    const loadingText = document.getElementById("loading-text");
+    const mbText = document.getElementById("mb-text");
+    let done = false;
+    let fakeProgress = 0;
+    const totalMB = 87.4;
+
+    function updateMB(percent) {
+      const clampedPercent = Math.max(0, Math.min(percent, 100));
+      const loadedMB = totalMB * (clampedPercent / 100);
+      mbText.textContent = loadedMB.toFixed(1) + " MB / " + totalMB.toFixed(1) + " MB";
+    }
+
+    function setProgress(percent) {
+      fakeProgress = Math.max(fakeProgress, Math.min(percent, 95));
+      loadingBar.style.width = fakeProgress.toFixed(1) + "%";
+      updateMB(fakeProgress);
+      loadingText.textContent = "loading";
+    }
+
+    function finishLoading() {
+      if (done) return;
+      done = true;
+      loadingBar.style.width = "100%";
+      updateMB(100);
+      loadingText.textContent = "your game is ready";
+
+      setTimeout(function() {
+        loadingScreen.classList.add("fade-out");
+        loadingScreen.addEventListener("transitionend", function() {
+          loadingScreen.classList.add("hidden");
+        }, { once: true });
+
+        setTimeout(function() {
+          loadingScreen.classList.add("hidden");
+        }, 500);
+      }, 550);
+    }
+
+    updateMB(0);
+
+    const progressTimer = setInterval(function() {
+      if (done) {
+        clearInterval(progressTimer);
+        return;
+      }
+
+      setProgress(fakeProgress + Math.max(1, (95 - fakeProgress) * 0.06));
+    }, 180);
+
+    frame.addEventListener("load", function() {
+      setTimeout(finishLoading, 600);
+    }, { once: true });
+
+    setTimeout(finishLoading, 9000);
+  </script>
+</body>
+</html>
