@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>game:search</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400;500;600;700&display=swap');
+
+    :root {
+      --embed-scale: 1;
+      --page-border-size: clamp(1px, calc(2px * var(--embed-scale)), 4px);
+      --card-border-size: clamp(1px, calc(1px * var(--embed-scale)), 3px);
+      --ui-border-size: clamp(1px, calc(1px * var(--embed-scale)), 3px);
+      --grid-gap: clamp(12px, calc(22px * var(--embed-scale)), 34px);
+      --card-size: clamp(150px, calc(230px * var(--embed-scale)), 280px);
+      --card-info-pad: clamp(7px, calc(9px * var(--embed-scale)), 12px);
+      --card-title-size: clamp(10px, calc(12px * var(--embed-scale)), 15px);
+      --card-desc-size: clamp(8px, calc(9px * var(--embed-scale)), 11px);
+      --tag-size: clamp(6px, calc(7px * var(--embed-scale)), 8px);
+      --tag-pad-y: clamp(1px, calc(2px * var(--embed-scale)), 3px);
+      --tag-pad-x: clamp(3px, calc(4px * var(--embed-scale)), 5px);
+      --shell-side-pad: clamp(12px, calc(28px * var(--embed-scale)), 44px);
+      --border: rgba(255, 255, 255, 0.82);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.68);
+      --card: rgba(0, 0, 0, 0.62);
+      --card-hover: rgba(255, 255, 255, 0.12);
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      background: #050505;
+      color: var(--text);
+      font-family: 'Google Sans Code', 'Google Sans Mono', monospace;
+      overflow-x: hidden;
+    }
+
+    body {
+      border: var(--page-border-size) solid var(--border);
+      min-height: 100vh;
+      position: relative;
+      isolation: isolate;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -20%;
+      z-index: -2;
+      background:
+        linear-gradient(45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.09) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.09) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.09) 75%);
+      background-size: 64px 64px;
+      background-position: 0 0, 0 32px, 32px -32px, -32px 0;
+      transform: translate3d(0, 0, 0);
+      animation: checkerDrift 28s linear infinite;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.14), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.08), transparent 38%),
+        rgba(0, 0, 0, 0.66);
+      pointer-events: none;
+    }
+
+    @keyframes checkerDrift {
+      from {
+        transform: translate3d(0, 0, 0) scale(1.05);
+      }
+
+      to {
+        transform: translate3d(-128px, 128px, 0) scale(1.05);
+      }
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - (var(--shell-side-pad) * 2)));
+      margin: 0 auto;
+      padding: clamp(28px, calc(44px * var(--embed-scale)), 58px) 0 clamp(36px, calc(54px * var(--embed-scale)), 70px);
+    }
+
+    header {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 28px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(34px, 7vw, 76px);
+      line-height: 0.94;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 5px 0 #000, 0 0 20px var(--shadow);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: clamp(14px, 2vw, 18px);
+      font-weight: 700;
+      text-shadow: 0 2px 4px #000;
+    }
+
+    .search-wrap {
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      margin: 0 auto 26px;
+      width: min(720px, 100%);
+      padding: 8px;
+      border: var(--ui-border-size) solid var(--border);
+      background: rgba(0, 0, 0, 0.72);
+      box-shadow: 0 10px 30px var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    #searchInput {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.42);
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      outline: none;
+      padding: 14px 16px;
+      font-family: inherit;
+    }
+
+    #searchInput::placeholder {
+      color: rgba(255,255,255,0.55);
+    }
+
+    .meta-row {
+      width: min(720px, 100%);
+      margin: -14px auto 24px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(var(--card-size), var(--card-size)));
+      justify-content: center;
+      justify-items: center;
+      align-items: start;
+      gap: var(--grid-gap);
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .game-card {
+      cursor: pointer;
+      position: relative;
+      display: block;
+      width: var(--card-size);
+      min-height: var(--card-size);
+      aspect-ratio: 1 / 1;
+      border: var(--card-border-size) solid var(--border);
+      background: var(--card);
+      box-shadow: 0 10px 28px var(--shadow);
+      color: inherit;
+      text-decoration: none;
+      overflow: hidden;
+      transform: translateY(0);
+      transition:
+        transform 160ms ease,
+        background 160ms ease,
+        border-color 160ms ease;
+    }
+
+    .game-card:hover,
+    .game-card:focus-visible {
+      transform: translateY(calc(-4px * var(--embed-scale)));
+      background: var(--card-hover);
+      border-color: #fff;
+    }
+
+    .game-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      padding: 0;
+      display: block;
+      background: rgba(0,0,0,0.35);
+      transition:
+        transform 180ms ease,
+        filter 180ms ease,
+        opacity 180ms ease;
+    }
+
+    .game-card:hover .game-image,
+    .game-card:focus-visible .game-image {
+      transform: scale(1.05);
+      filter: blur(2px) brightness(0.48);
+      opacity: 0.78;
+    }
+
+    .game-info {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      gap: clamp(4px, calc(6px * var(--embed-scale)), 8px);
+      padding: var(--card-info-pad);
+      background:
+        linear-gradient(180deg, rgba(0,0,0,0.22), rgba(0,0,0,0.82));
+      opacity: 0;
+      transform: translateY(10px);
+      transition:
+        opacity 180ms ease,
+        transform 180ms ease;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .game-card:hover .game-info,
+    .game-card:focus-visible .game-info {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .game-title {
+      position: relative;
+      font-size: var(--card-title-size);
+      line-height: 1;
+      font-weight: 900;
+      text-transform: uppercase;
+      text-shadow: 0 3px 0 #000;
+    }
+
+    .game-desc {
+      position: relative;
+      color: rgba(255,255,255,0.86);
+      font-size: var(--card-desc-size);
+      line-height: 1.15;
+      font-weight: 700;
+      text-shadow: 0 2px 4px #000;
+    }
+
+    .tag-row {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: clamp(2px, calc(3px * var(--embed-scale)), 4px);
+    }
+
+    .tag {
+      border: 1px solid rgba(255,255,255,0.36);
+      padding: var(--tag-pad-y) var(--tag-pad-x);
+      color: #fff;
+      background: rgba(0,0,0,0.52);
+      font-size: var(--tag-size);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+
+    .empty-state {
+      display: none;
+      margin-top: 28px;
+      padding: 24px;
+      border: var(--ui-border-size) solid var(--border);
+      background: rgba(0,0,0,0.62);
+      color: var(--muted);
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .empty-state.show {
+      display: block;
+    }
+
+    footer {
+      margin-top: 34px;
+      color: rgba(255,255,255,0.48);
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    #gameData {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::before {
+        animation: none;
+      }
+
+      .game-card {
+        transition: none;
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        border-width: max(1px, calc(var(--page-border-size) * 0.75));
+      }
+
+      .shell {
+        width: min(100% - 20px, 1180px);
+        padding-top: clamp(24px, calc(32px * var(--embed-scale)), 36px);
+      }
+
+      .meta-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>about:games</h1>
+      <p class="subtitle">yes this is my stash</p>
+    </header>
+
+    <section class="search-wrap" aria-label="Game search">
+      <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="Search games..." aria-label="Search games">
+    </section>
+
+    <section class="meta-row">
+      <span id="resultCount">0 games</span>
+      <span>est 2026</span>
+    </section>
+
+    <section class="grid" id="gameGrid" aria-label="Available games"></section>
+
+    <section class="empty-state" id="emptyState">nothing was found. try searching for something else.</section>
+
+    <footer>courtesy of about:game. all rights reserved.</footer>
+  </main>
+
+  <table id="gameData">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Image</th>
+        <th>Description</th>
+        <th>Source</th>
+        <th>Tags</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+  <td>Sonic Mania Plus</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/sonicmplus.png</td>
+  <td>first created in 2017, published in 2018</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/sonic%20mania%20plus.html</td>
+  <td>sega, platformer, speedrun, pc</td>
+</tr>
+
+<tr>
+  <td>Pizza Tower v1.1.0</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/pizzatower.png</td>
+  <td>first created in 2018, published in 2023</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/pt110.html</td>
+  <td>platformer, fast-paced, boss fight, pc</td>
+</tr>
+
+<tr>
+  <td>Baldi's Basics Plus v0.12.2</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/baldi.png</td>
+  <td>first created in 2018, published in 2020</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/baldiplus.html</td>
+  <td>unity, horror, roguelike, pc</td>
+</tr>
+
+<tr>
+  <td>Class of '09</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/classofnine.png</td>
+  <td>first created in 2020, published in 2021</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/class09.html</td>
+  <td>dark comedy, rejection sim, all platforms</td>
+</tr>
+
+<tr>
+  <td>ULTRAKILL</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/ultrakill.png</td>
+  <td>first created in 2018, published in 2020</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/ultrakill.html</td>
+  <td>unity, intensive, score attack, fast-paced, shooter, pc</td>
+</tr>
+
+<tr>
+  <td>Your Only Move is HUSTLE</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/yomihustle.png</td>
+  <td>first created in 2022, published in 2023</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/yomih.html</td>
+  <td>strategy, fighter, 2 player, pc</td>
+</tr>
+
+<tr>
+  <td>Buckshot Roulette</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/buckshot.png</td>
+  <td>first created in 2023, published in 2024</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/bsrou.html</td>
+  <td>horror, strategy, pc</td>
+</tr>
+
+<tr>
+  <td>Bendy and the Ink Machine</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/batim.png</td>
+  <td>first created in 2017, published in 2018</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/batim.html</td>
+  <td>unity, horror, story, pc</td>
+</tr>
+
+<tr>
+  <td>DELTARUNE chapters 1-4</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/gamecards/deltarune.png</td>
+  <td>first created in 2011, published in 2018</td>
+  <td>https://raw.githubusercontent.com/hostbin333/fffffffffffffffffffffffffffff/main/games/deltarunechonefour.html</td>
+  <td>gamemaker, action-driven, rpg, story, pc</td>
+</tr>
+
+    </tbody>
+  </table>
+
+  <script>
+    function updateEmbedScale() {
+      const width = Math.max(320, window.innerWidth || document.documentElement.clientWidth || 1180);
+      const height = Math.max(240, window.innerHeight || document.documentElement.clientHeight || 720);
+      const sizeScale = Math.min(width / 1180, height / 720);
+      const clampedScale = Math.min(2, Math.max(0.5, sizeScale));
+      document.documentElement.style.setProperty("--embed-scale", clampedScale.toFixed(3));
+    }
+
+    updateEmbedScale();
+    window.addEventListener("resize", updateEmbedScale);
+    window.addEventListener("orientationchange", updateEmbedScale);
+
+    const gameGrid = document.getElementById("gameGrid");
+    const searchInput = document.getElementById("searchInput");
+    const resultCount = document.getElementById("resultCount");
+    const emptyState = document.getElementById("emptyState");
+
+    function normalize(value) {
+      return String(value || "").toLowerCase().trim();
+    }
+
+    function readGamesFromTable() {
+      const rows = Array.from(document.querySelectorAll("#gameData tbody tr"));
+      return rows.map(function(row) {
+        const cells = row.querySelectorAll("td");
+        return {
+          title: (cells[0]?.textContent || "").trim(),
+          image: (cells[1]?.textContent || "").trim(),
+          description: (cells[2]?.textContent || "").trim(),
+          source: (cells[3]?.textContent || "").trim(),
+          tags: (cells[4]?.textContent || "")
+            .split(",")
+            .map(function(tag) { return tag.trim(); })
+            .filter(Boolean)
+        };
+      }).filter(function(game) {
+        return game.title && game.source;
+      });
+    }
+
+    const games = readGamesFromTable().sort(function(a, b) {
+      return a.title.localeCompare(b.title, undefined, {
+        sensitivity: "base",
+        numeric: true
+      });
+    });
+
+    function gameMatches(game, query) {
+      if (!query) return true;
+      const haystack = [
+        game.title,
+        game.description,
+        game.source,
+        ...(game.tags || [])
+      ].map(normalize).join(" ");
+      return haystack.includes(query);
+    }
+
+    const loaderTitle = "about:game loader";
+    const loaderFavicon = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='black'/%3E%3C/svg%3E";
+
+    function convertGoogleDriveLink(url) {
+      url = String(url || "").trim();
+      if (!url) return "";
+      const fileMatch = url.match(/drive\.google\.com\/file\/d\/([^/]+)/i);
+      const idMatch = url.match(/[?&]id=([^&]+)/i);
+      const fileId = fileMatch ? fileMatch[1] : (idMatch ? idMatch[1] : "");
+      if (fileId) return "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(fileId);
+      return url;
+    }
+
+    function latestUrl(url) {
+      url = convertGoogleDriveLink(url);
+      if (!url) return "";
+      const separator = url.indexOf("?") === -1 ? "?" : "&";
+      return url + separator + "v=" + Date.now();
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function loaderHeadHtml() {
+      return "<title>" + loaderTitle + "</title><link rel='icon' href='" + loaderFavicon + "'>";
+    }
+
+    function refreshPromptStyle() {
+      return "<style id='aboutGameRefreshPromptStyle'>#aboutGameRefreshPrompt{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147483647;background:rgba(0,0,0,.78);color:#fff;border:1px solid rgba(255,255,255,.7);padding:7px 12px;font-family:monospace;font-size:13px;font-weight:700;line-height:1;pointer-events:none;text-shadow:0 1px 2px #000;opacity:1;animation:aboutGameRefreshFade 3.5s ease forwards}@keyframes aboutGameRefreshFade{0%,55%{opacity:1}100%{opacity:0;visibility:hidden}}</style>";
+    }
+
+    function refreshPromptBody() {
+      return "<div id='aboutGameRefreshPrompt'>refresh to go back</div>";
+    }
+
+    function forceLoaderIdentity(htmlText, sourceUrl, title) {
+      htmlText = String(htmlText || "");
+      const isDeltarune = isDeltaruneSource(sourceUrl, title);
+      const extraBodyPatch = isDeltarune ? deltaruneChapterSelectorPatch() : "";
+
+      if (/<head[^>]*>/i.test(htmlText)) {
+        htmlText = htmlText.replace(/<title[^>]*>[\s\S]*?<\/title>/i, "");
+        htmlText = htmlText.replace(/<link[^>]+rel=["']?(shortcut icon|icon)["']?[^>]*>/ig, "");
+        htmlText = htmlText.replace(/<head[^>]*>/i, function(match) {
+          return match + loaderHeadHtml() + refreshPromptStyle();
+        });
+      } else if (/<html[^>]*>/i.test(htmlText)) {
+        htmlText = htmlText.replace(/<html[^>]*>/i, function(match) {
+          return match + "<head>" + loaderHeadHtml() + refreshPromptStyle() + "</head>";
+        });
+      } else {
+        htmlText = "<!doctype html><html><head>" + loaderHeadHtml() + refreshPromptStyle() + "</head><body>" + htmlText + "</body></html>";
+      }
+
+      if (/<\/body>/i.test(htmlText)) {
+        htmlText = htmlText.replace(/<\/body>/i, refreshPromptBody() + extraBodyPatch + "</body>");
+      } else {
+        htmlText += refreshPromptBody() + extraBodyPatch;
+      }
+
+      return htmlText;
+    }
+
+    function writeLoaderMessage(text) {
+      document.open();
+      document.write("<!doctype html><html><head><meta charset='utf-8'>" + loaderHeadHtml() + "<style>html,body{height:100%;margin:0;background:#050505;color:white;font-family:monospace;display:grid;place-items:center;text-align:center}</style></head><body><div>" + escapeHtml(text) + "</div></body></html>");
+      document.close();
+    }
+
+    function writeLoaderError(error, directUrl, sourceUrl) {
+      document.open();
+      document.write("<!doctype html><html><head><meta charset='utf-8'>" + loaderHeadHtml() + refreshPromptStyle() + "<style>html,body{min-height:100%;margin:0;background:#111;color:#fff;font-family:monospace;padding:24px;line-height:1.5}code{background:rgba(255,255,255,.12);padding:2px 5px}a{color:#fff}</style></head><body><h1>Could not load the HTML.</h1><p>Error: " + escapeHtml(error.message || error) + "</p><p>The source may not allow browser fetch, or the file may not be public.</p><p><code>" + escapeHtml(directUrl) + "</code></p><p><a href='" + escapeHtml(sourceUrl) + "' target='_blank' rel='noopener noreferrer'>Open original source instead</a></p>" + refreshPromptBody() + "</body></html>");
+      document.close();
+    }
+
+    function isDeltaruneSource(sourceUrl, title) {
+      const combined = String(sourceUrl || "") + " " + String(title || "");
+      return /deltarune/i.test(combined);
+    }
+
+    function getDeltaruneRefreshState() {
+      try {
+        return sessionStorage.getItem("aboutGameDeltaruneRefreshState") || "";
+      } catch (error) {
+        return "";
+      }
+    }
+
+    function setDeltaruneRefreshState(value) {
+      try {
+        sessionStorage.setItem("aboutGameDeltaruneRefreshState", value);
+      } catch (error) {}
+    }
+
+    function clearDeltaruneRefreshState() {
+      try {
+        sessionStorage.removeItem("aboutGameDeltaruneRefreshState");
+      } catch (error) {}
+    }
+
+    function deltaruneChapterSelectorPatch() {
+      return "<script id='aboutGameDeltaruneRefreshPatch'>(function(){var startedChapter=false;function setState(v){try{sessionStorage.setItem('aboutGameDeltaruneRefreshState',v)}catch(e){}}function selectorVisible(){return !!(document.querySelector('.menu')&&document.querySelector('.logo-container'))}function markSelector(){if(!startedChapter&&selectorVisible())setState('selector')}function markChapter(){startedChapter=true;setState('chapter')}function looksLikeChapterAction(el){if(!el)return false;var text=((el.getAttribute&&((el.getAttribute('href')||'')+' '+(el.getAttribute('onclick')||'')))||'')+' '+(el.textContent||'');return /loadChapter\\s*\\(|chapter\\s*[1-4]/i.test(text)}function patchClicks(){document.querySelectorAll('a,button,[onclick]').forEach(function(el){if(el.__aboutGameDeltarunePatched)return;el.__aboutGameDeltarunePatched=true;['pointerdown','mousedown','touchstart','click'].forEach(function(type){el.addEventListener(type,function(){if(looksLikeChapterAction(el))markChapter()},true)})})}function wrapLoadChapter(){try{if(typeof window.loadChapter==='function'&&!window.loadChapter.__aboutGameWrapped){var real=window.loadChapter;window.loadChapter=function(){markChapter();return real.apply(this,arguments)};window.loadChapter.__aboutGameWrapped=true}}catch(e){}}function watchDom(){if(selectorVisible()){if(!startedChapter)setState('selector')}else{var canvas=document.querySelector('canvas');var bodyText=(document.body&&document.body.textContent||'').slice(0,500);if(startedChapter||canvas||!/chapter\\s*[1-4]|the beginning|cyber|late night|prophecy/i.test(bodyText)){markChapter()}}}document.addEventListener('keydown',function(e){if(e.key==='Enter'&&selectorVisible())markChapter()},true);window.addEventListener('beforeunload',function(){watchDom()},true);function tick(){patchClicks();wrapLoadChapter();watchDom()}setState('selector');tick();new MutationObserver(tick).observe(document.documentElement,{childList:true,subtree:true});setInterval(tick,250)})();<\/script>";
+    }
+
+    async function loadSourceHtmlIntoCurrentPage(sourceUrl, title) {
+      const directUrl = latestUrl(sourceUrl);
+
+      if (isDeltaruneSource(sourceUrl, title)) {
+        setDeltaruneRefreshState("selector");
+      }
+      writeLoaderMessage("Loading " + String(title || "game") + "...");
+
+      try {
+        const response = await fetch(directUrl, { method: "GET", cache: "no-store" });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
+        const htmlText = await response.text();
+
+        document.open();
+        document.write(forceLoaderIdentity(htmlText, sourceUrl, title));
+        document.close();
+      } catch (error) {
+        if (isDeltaruneSource(sourceUrl, title)) {
+          clearDeltaruneRefreshState();
+        }
+        writeLoaderError(error, directUrl, sourceUrl);
+      }
+    }
+
+    function createGameCard(game) {
+      const card = document.createElement("div");
+      card.className = "game-card";
+      card.setAttribute("role", "button");
+      card.setAttribute("tabindex", "0");
+      card.setAttribute("aria-label", "Open " + game.title);
+
+      card.addEventListener("click", function(event) {
+        event.preventDefault();
+        loadSourceHtmlIntoCurrentPage(game.source, game.title);
+      });
+
+      const image = document.createElement("img");
+      image.className = "game-image";
+      image.src = game.image || "";
+      image.alt = "";
+      image.loading = "lazy";
+
+      const info = document.createElement("div");
+      info.className = "game-info";
+
+      const title = document.createElement("div");
+      title.className = "game-title";
+      title.textContent = game.title;
+
+      const description = document.createElement("div");
+      description.className = "game-desc";
+      description.textContent = game.description || "No description.";
+
+      const tagRow = document.createElement("div");
+      tagRow.className = "tag-row";
+
+      (game.tags || []).forEach(function(tag) {
+        const tagEl = document.createElement("span");
+        tagEl.className = "tag";
+        tagEl.textContent = tag;
+        tagRow.appendChild(tagEl);
+      });
+
+      info.appendChild(title);
+      info.appendChild(description);
+      info.appendChild(tagRow);
+      card.appendChild(image);
+      card.appendChild(info);
+
+      return card;
+    }
+
+    function renderGames() {
+      const query = normalize(searchInput.value);
+      const matchingGames = games.filter(function(game) {
+        return gameMatches(game, query);
+      });
+
+      gameGrid.innerHTML = "";
+
+      matchingGames.forEach(function(game) {
+        gameGrid.appendChild(createGameCard(game));
+      });
+
+      resultCount.textContent = matchingGames.length + (matchingGames.length === 1 ? " game" : " games");
+      emptyState.classList.toggle("show", matchingGames.length === 0);
+    }
+
+    searchInput.addEventListener("input", renderGames);
+    renderGames();
+
+    function handleDeltaruneRefreshReturn() {
+      const state = getDeltaruneRefreshState();
+
+      if (state === "selector") {
+        clearDeltaruneRefreshState();
+        return;
+      }
+
+      if (state !== "chapter") return;
+
+      const deltaruneGame = games.find(function(game) {
+        return isDeltaruneSource(game.source, game.title);
+      });
+
+      if (!deltaruneGame) {
+        clearDeltaruneRefreshState();
+        return;
+      }
+
+      setTimeout(function() {
+        loadSourceHtmlIntoCurrentPage(deltaruneGame.source, deltaruneGame.title);
+      }, 0);
+    }
+
+    handleDeltaruneRefreshReturn();
+
+  </script>
+</body>
+</html>
